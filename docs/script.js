@@ -1,6 +1,5 @@
-// آدرس سرور پایتون روی کامپیوتر تو
-// باید با Ngrok یا similar tool قابل دسترس بشه
-const PYTHON_SERVER_URL = "https://094f4df3d52b1590588fef9566b10c64.serveo.net";
+// آدرس GitHub Pages شما - این رو تغییر بده
+const GITHUB_PAGES_URL = "https://meghaffarian.github.io/WebApp/index.html";
 
 // شناسایی مدل دستگاه و سیستم عامل
 function getDeviceInfo() {
@@ -63,34 +62,43 @@ async function getIPAddress() {
     }
 }
 
-// ارسال داده به سرور پایتون
-async function sendDataToServer(userId, deviceInfo, ipAddress, browserInfo, userAgent, platform, language, screenResolution) {
+// ذخیره داده در localStorage (موقت)
+function saveDataToLocalStorage(userData) {
     try {
-        const response = await fetch(`${PYTHON_SERVER_URL}/webapp-data`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: userId,
-                device_info: deviceInfo,
-                ip_address: ipAddress,
-                browser_info: browserInfo,
-                user_agent: userAgent,
-                platform: platform,
-                language: language,
-                screen_resolution: screenResolution
-            })
-        });
+        // دریافت داده‌های موجود
+        const existingData = JSON.parse(localStorage.getItem('telegramBotUsers') || '{}');
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // افزودن داده جدید
+        existingData[userData.user_id] = {
+            device_info: userData.device_info,
+            ip_address: userData.ip_address,
+            browser_info: userData.browser_info,
+            user_agent: userData.user_agent,
+            platform: userData.platform,
+            language: userData.language,
+            screen_resolution: userData.screen_resolution,
+            timestamp: new Date().toISOString()
+        };
         
-        return await response.json();
+        // ذخیره داده‌ها
+        localStorage.setItem('telegramBotUsers', JSON.stringify(existingData));
+        
+        return true;
     } catch (error) {
-        console.error("Error sending data:", error);
-        throw error;
+        console.error("Error saving to localStorage:", error);
+        return false;
+    }
+}
+
+// نمایش داده‌های ذخیره شده
+function showStoredData() {
+    try {
+        const data = JSON.parse(localStorage.getItem('telegramBotUsers') || '{}');
+        console.log("Stored data:", data);
+        return data;
+    } catch (error) {
+        console.error("Error reading from localStorage:", error);
+        return {};
     }
 }
 
@@ -115,40 +123,101 @@ document.addEventListener('DOMContentLoaded', async function() {
     languageElement.textContent = navigator.language;
     resolutionElement.textContent = `${screen.width}x${screen.height}`;
     
+    // نمایش داده‌های ذخیره شده قبلی (برای تست)
+    const storedData = showStoredData();
+    console.log("Previously stored data:", storedData);
+    
     // ارسال اطلاعات هنگام کلیک روی دکمه
     sendButton.addEventListener('click', async function() {
         try {
             sendButton.disabled = true;
-            statusElement.textContent = "در حال ارسال اطلاعات...";
+            statusElement.textContent = "در حال ذخیره اطلاعات...";
             statusElement.style.color = "blue";
             
             const tg = window.Telegram.WebApp;
             const userId = tg.initDataUnsafe.user.id;
             
-            const result = await sendDataToServer(
-                userId,
-                deviceInfo,
-                ipAddress,
-                browserInfo,
-                navigator.userAgent,
-                navigator.platform,
-                navigator.language,
-                `${screen.width}x${screen.height}`
-            );
+            // ذخیره در localStorage
+            const success = saveDataToLocalStorage({
+                user_id: userId,
+                device_info: deviceInfo,
+                ip_address: ipAddress,
+                browser_info: browserInfo,
+                user_agent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screen_resolution: `${screen.width}x${screen.height}`
+            });
             
-            statusElement.textContent = "✅ اطلاعات با موفقیت ارسال شد!";
-            statusElement.style.color = "green";
-            
-            // بستن وب‌اپ بعد از 2 ثانیه
-            setTimeout(() => {
-                tg.close();
-            }, 2000);
+            if (success) {
+                statusElement.textContent = "✅ اطلاعات با موفقیت ذخیره شد!";
+                statusElement.style.color = "green";
+                
+                // نمایش داده ذخیره شده
+                const newData = showStoredData();
+                console.log("New stored data:", newData);
+                
+                // بستن وب‌اپ بعد از 2 ثانیه
+                setTimeout(() => {
+                    if (tg && tg.close) {
+                        tg.close();
+                    }
+                }, 2000);
+            } else {
+                statusElement.textContent = "❌ خطا در ذخیره اطلاعات.";
+                statusElement.style.color = "red";
+                sendButton.disabled = false;
+            }
             
         } catch (error) {
             console.error("Error:", error);
-            statusElement.textContent = "❌ خطا در ارسال اطلاعات. لطفاً دوباره تلاش کنید.";
+            statusElement.textContent = "❌ خطا در ذخیره اطلاعات. لطفاً دوباره تلاش کنید.";
             statusElement.style.color = "red";
             sendButton.disabled = false;
         }
     });
 });
+
+// تابع برای دانلود داده‌ها به صورت فایل JSON (برای توسعه)
+function downloadData() {
+    try {
+        const data = localStorage.getItem('telegramBotUsers');
+        if (data) {
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'telegram_bot_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    } catch (error) {
+        console.error("Error downloading data:", error);
+    }
+}
+
+// تابع برای پاک کردن داده‌ها (برای توسعه)
+function clearData() {
+    if (confirm('آیا از پاک کردن همه داده‌ها مطمئن هستید؟')) {
+        localStorage.removeItem('telegramBotUsers');
+        alert('داده‌ها پاک شدند.');
+        location.reload();
+    }
+}
+
+// اضافه کردن دکمه‌های توسعه به صفحه (فقط در حالت توسعه)
+if (window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1')) {
+    document.addEventListener('DOMContentLoaded', function() {
+        const devButtons = `
+            <div style="margin-top: 20px; padding: 10px; background: #eee; border-radius: 5px;">
+                <h3>ابزارهای توسعه:</h3>
+                <button onclick="downloadData()" style="background: #28a745; margin: 5px;">دانلود داده‌ها</button>
+                <button onclick="clearData()" style="background: #dc3545; margin: 5px;">پاک کردن داده‌ها</button>
+                <button onclick="console.log(showStoredData())" style="background: #17a2b8; margin: 5px;">نمایش در کنسول</button>
+            </div>
+        `;
+        document.querySelector('.container').innerHTML += devButtons;
+    });
+}
