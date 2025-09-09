@@ -1,6 +1,6 @@
 // آدرس سرور پایتون روی کامپیوتر تو
 // باید با Ngrok یا similar tool قابل دسترس بشه
-const PYTHON_SERVER_URL = "https://sheree-intergilt-cleora.ngrok-free.app";
+const PYTHON_SERVER_URL = "https://2a366d3d026751dcc30e4440c7199471.serveo.net";
 
 // شناسایی مدل دستگاه و سیستم عامل
 function getDeviceInfo() {
