@@ -1,6 +1,6 @@
 // آدرس سرور پایتون روی کامپیوتر تو
 // باید با Ngrok یا similar tool قابل دسترس بشه
-const PYTHON_SERVER_URL = " https://41212403f5e383fc6daa2e1d2effa1f5.serveo.net";
+const PYTHON_SERVER_URL = "https://094f4df3d52b1590588fef9566b10c64.serveo.net";
 
 // شناسایی مدل دستگاه و سیستم عامل
 function getDeviceInfo() {
