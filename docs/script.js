@@ -28,9 +28,10 @@ async function getIPAddress() {
 }
 
 // ارسال داده به سرور
+// تغییر آدرس به localhost
 async function sendDataToServer(userId, phoneModel, ipAddress) {
     try {
-        const response = await fetch('https://your-domain.com/webapp-data', {
+        const response = await fetch('http://localhost:5000/webapp-data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
