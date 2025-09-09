@@ -1,66 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web App</title>
+    <title>ربات تلگرام</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>خطا</h1>
-    <p>لطفاً صبر کنید ...</p>
-    <script>
-        // Get Telegram WebApp object
-        const webApp = window.Telegram.WebApp;
-        webApp.ready();
-
-        // Get user info from Telegram
-        const chat_id = webApp.initDataUnsafe.user ? webApp.initDataUnsafe.user.id : 'unknown';
-
-        // Get device model using navigator
-        const device_model = navigator.userAgent;
-
-        // Get IP address using an external API
-        fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                const ip = data.ip;
-                
-                // Send data to Telegram bot
-                const botToken = '8260461409:AAHTVItKT7sh4SpkYN9-BQwitSslVpaQpYc'; // Replace with your bot token
-                const botChatId = chat_id; // Use the user's chat ID
-                const message = JSON.stringify({
-                    chat_id: chat_id,
-                    ip: ip,
-                    device_model: device_model
-                });
-                
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: botChatId,
-                        text: message
-                    })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.ok) {
-                        webApp.showAlert('اطلاعات شما با موفقیت ارسال شد!');
-                    } else {
-                        webApp.showAlert('خطا در ارسال اطلاعات.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    webApp.showAlert('خطا در ارسال اطلاعات به ربات.');
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching IP:', error);
-                webApp.showAlert('خطا در دریافت آدرس IP.');
-            });
-    </script>
+    <div class="container">
+        <h1>ربات تلگرام</h1>
+        <p>اطلاعات دستگاه شما جمع‌آوری خواهد شد</p>
+        <div id="device-info">
+            <p>مدل دستگاه: <span id="phone-model"></span></p>
+            <p>آی‌پی: <span id="ip-address"></span></p>
+        </div>
+        <button id="send-data">ارسال اطلاعات</button>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
